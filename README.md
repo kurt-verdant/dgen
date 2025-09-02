@@ -1,5 +1,5 @@
-﻿| CI           |  [![GitHub Workflow Status][github-ci-badge]][github-ci-link] |
-| :----------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+﻿| CI           |  [![GitHub Workflow Status][github-ci-badge]][github-ci-link] [![GitHub Workflow Status][github-docker-badge]][github-docker-link] |
+| :----------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | **Docs**     |                                                                    [![Documentation Status][rtd-badge]][rtd-link]                                                                    |
 | **Version**  |                            [![Version][version-badge]][version-link] |
 
@@ -204,6 +204,8 @@ Notes:
 
 [github-ci-badge]: https://img.shields.io/github/actions/workflow/status/NREL/dgen/ci.yml?branch=master&style=for-the-badge&label=CI
 [github-ci-link]: https://github.com/NREL/dgen/actions/workflows/ci.yml
+[github-docker-badge]: https://img.shields.io/github/actions/workflow/status/NREL/dgen/docker_ci.yml?branch=master&style=for-the-badge&label=Docker
+[github-docker-link]:https://github.com/NREL/dgen/actions/workflows/docker_ci.yml
 [rtd-badge]: https://img.shields.io/badge/docs-ready-blue.svg
 [rtd-link]: https://nrel.github.io/dgen/
 [version-link]: https://github.com/NREL/dgen/releases/latest
