@@ -97,7 +97,7 @@ def apply_export_tariff_params(dataframe, net_metering_state_df, net_metering_ut
     nem_columns = ['compensation_style','nem_system_kw_limit']
     net_metering_utility_df = net_metering_utility_df[['eia_id','sector_abbr','state_abbr']+nem_columns]
     # check if utility-specific NEM parameters apply to any agents - need to join on state too (e.g. Pacificorp UT vs Pacificorp ID)
-    temp_df = pd.merge(dataframe, net_metering_utility_df, how='left', on=['eia_id','sector_abbr','state_abbr'])
+    temp_df = pd.merge(dataframe, net_metering_utility_df.drop_duplicates(), how='left', on=['eia_id','sector_abbr','state_abbr'])
     
     # filter agents with non-null nem_system_kw_limit - these are agents WITH utility NEM
     agents_with_utility_nem = temp_df[pd.notnull(temp_df['nem_system_kw_limit'])]
@@ -106,7 +106,7 @@ def apply_export_tariff_params(dataframe, net_metering_state_df, net_metering_ut
     agents_without_utility_nem = temp_df[pd.isnull(temp_df['nem_system_kw_limit'])].drop(nem_columns, axis=1)
     # merge agents with state-specific NEM parameters
     net_metering_state_df =  net_metering_state_df[['state_abbr', 'sector_abbr']+nem_columns]
-    agents_without_utility_nem = pd.merge(agents_without_utility_nem, net_metering_state_df, how='left', on=['state_abbr', 'sector_abbr'])
+    agents_without_utility_nem = pd.merge(agents_without_utility_nem, net_metering_state_df.drop_duplicates(), how='left', on=['state_abbr', 'sector_abbr'])
     
     # re-combine agents list and fill nan's
     dataframe = pd.concat([agents_with_utility_nem, agents_without_utility_nem], sort=False)
@@ -366,9 +366,9 @@ def apply_financial_params(dataframe, financing_terms, itc_options, inflation_ra
     '''
     dataframe = dataframe.reset_index()
 
-    dataframe = dataframe.merge(financing_terms, how='left', on=['year', 'sector_abbr'])
+    dataframe = dataframe.merge(financing_terms.drop_duplicates(), how='left', on=['year', 'sector_abbr'])
 
-    dataframe = dataframe.merge(itc_options[['itc_fraction_of_capex', 'year', 'tech', 'sector_abbr']], 
+    dataframe = dataframe.merge(itc_options[['itc_fraction_of_capex', 'year', 'tech', 'sector_abbr']].drop_duplicates(), 
                                 how='left', on=['year', 'tech', 'sector_abbr'])
     
 
@@ -385,7 +385,7 @@ def apply_load_growth(dataframe, load_growth_df):
     dataframe = dataframe.reset_index()
     
     dataframe["county_id"] = dataframe.county_id.astype(int)
-    dataframe = pd.merge(dataframe, load_growth_df, how='left', on=['year', 'sector_abbr', 'county_id'])
+    dataframe = pd.merge(dataframe, load_growth_df.drop_duplicates(), how='left', on=['year', 'sector_abbr', 'county_id'])
 
     # for res, load growth translates to kwh_per_customer change
     dataframe['load_kwh_per_customer_in_bin'] = np.where(dataframe['sector_abbr']=='res',
@@ -710,15 +710,15 @@ def estimate_initial_market_shares(dataframe, state_starting_capacities_df):
     state_total_agents.columns = state_total_agents.columns.str.replace(
         'developable_agent_weight', 'agent_count')
     # merge together
-    state_denominators = pd.merge(state_total_developable_customers, state_total_agents, how='left', on=[
+    state_denominators = pd.merge(state_total_developable_customers, state_total_agents.drop_duplicates(), how='left', on=[
                                   'state_abbr', 'sector_abbr', 'tech'])
 
     # merge back to the main dataframe
-    dataframe = pd.merge(dataframe, state_denominators, how='left', on=[
+    dataframe = pd.merge(dataframe, state_denominators.drop_duplicates(), how='left', on=[
                          'state_abbr', 'sector_abbr', 'tech'])
 
     # merge in the state starting capacities
-    dataframe = pd.merge(dataframe, state_starting_capacities_df, how='left',
+    dataframe = pd.merge(dataframe, state_starting_capacities_df.drop_duplicates(), how='left',
                          on=['state_abbr', 'sector_abbr'])
     
 
@@ -764,7 +764,7 @@ def estimate_initial_market_shares(dataframe, state_starting_capacities_df):
 @decorators.fn_timer(logger=logger, tab_level=2, prefix='')
 def apply_market_last_year(dataframe, market_last_year_df):
     
-    dataframe = dataframe.merge(market_last_year_df, on=['agent_id'], how='left')
+    dataframe = dataframe.merge(market_last_year_df.drop_duplicates(), on=['agent_id'], how='left')
     return dataframe
 
 
