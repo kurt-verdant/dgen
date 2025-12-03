@@ -1,7 +1,12 @@
 name: docker-compose-actions-workflow
 on:
   push:
+    branches:
+      - master
   pull_request:
+  schedule:
+    - cron: '0 0 1,15 * *' # First and fifteenth of month “At 00:00”
+
 jobs:
 
   docker_compose:
