@@ -237,8 +237,7 @@ def calc_system_performance(kw, pv, utilityrate, loan, batt, costs, agent, rate_
     # Assign calculated values to the CashLoan module
     loan.SystemOutput.annual_energy_value = annual_energy_value 
     loan.SystemOutput.gen = utilityrate.SystemOutput.gen
-    loan.ChargesByMonth.utility_bill_w_sys = utilityrate.Outputs.utility_bill_w_sys#elec_cost_with_system
-    #loan.ThirdPartyOwnership.elec_cost_without_system = utilityrate.Outputs.utility_bill_wo_sys#elec_cost_without_system
+    loan.ChargesByMonth.utility_bill_w_sys = utilityrate.Outputs.utility_bill_w_sys
 
     # Calculate system costs
     direct_costs = (system_costs + batt_costs) * costs['cap_cost_multiplier']
