@@ -117,7 +117,7 @@ def apply_export_tariff_params(dataframe, net_metering_state_df, net_metering_ut
     net_metering_utility_df = net_metering_utility_df[['eia_id','sector_abbr','state_abbr']+nem_columns]
     
     # check if utility-specific NEM parameters apply to any agents - need to join on state too (e.g. Pacificorp UT vs Pacificorp ID)
-    temp_df = pd.merge(dataframe, net_metering_utility_df, how='left', on=['eia_id','sector_abbr','state_abbr'])
+    temp_df = pd.merge(dataframe, net_metering_utility_df.drop_duplicates(), how='left', on=['eia_id','sector_abbr','state_abbr'])
     
     # filter agents with non-null nem_system_kw_limit - these are agents WITH utility NEM
     agents_with_utility_nem = temp_df[pd.notnull(temp_df['nem_system_kw_limit'])]
@@ -127,7 +127,7 @@ def apply_export_tariff_params(dataframe, net_metering_state_df, net_metering_ut
     
     # merge agents with state-specific NEM parameters
     net_metering_state_df =  net_metering_state_df[['state_abbr', 'sector_abbr']+nem_columns]
-    agents_without_utility_nem = pd.merge(agents_without_utility_nem, net_metering_state_df, how='left', on=['state_abbr', 'sector_abbr'])
+    agents_without_utility_nem = pd.merge(agents_without_utility_nem, net_metering_state_df.drop_duplicates(), how='left', on=['state_abbr', 'sector_abbr'])
     
     # re-combine agents list and fill nan's
     dataframe = pd.concat([agents_with_utility_nem, agents_without_utility_nem], sort=False)
@@ -401,11 +401,9 @@ def apply_financial_params(dataframe, financing_terms, itc_options, inflation_ra
     '''
     dataframe = dataframe.reset_index()
 
-    # Merge financing terms onto agent DataFrame
-    dataframe = dataframe.merge(financing_terms, how='left', on=['year', 'sector_abbr'])
+    dataframe = dataframe.merge(financing_terms.drop_duplicates(), how='left', on=['year', 'sector_abbr'])
 
-    # Merge ITC options on to DataFrame
-    dataframe = dataframe.merge(itc_options[['itc_fraction_of_capex', 'year', 'tech', 'sector_abbr']], 
+    dataframe = dataframe.merge(itc_options[['itc_fraction_of_capex', 'year', 'tech', 'sector_abbr']].drop_duplicates(), 
                                 how='left', on=['year', 'tech', 'sector_abbr'])
     
     # Set inflation rate data to 'inflation_rate' column in agent DataFrame
@@ -441,9 +439,7 @@ def apply_load_growth(dataframe, load_growth_df):
     
     # Create 'county_id' column in agent DataFrame
     dataframe["county_id"] = dataframe.county_id.astype(int)
-    
-    # Merge load growth data onto agent DataFrame
-    dataframe = pd.merge(dataframe, load_growth_df, how='left', on=['year', 'sector_abbr', 'county_id'])
+    dataframe = pd.merge(dataframe, load_growth_df.drop_duplicates(), how='left', on=['year', 'sector_abbr', 'county_id'])
 
     # For residential agents, load growth translates to kwh_per_customer change
     dataframe['load_kwh_per_customer_in_bin'] = np.where(dataframe['sector_abbr']=='res',
@@ -1049,17 +1045,16 @@ def estimate_initial_market_shares(dataframe, state_starting_capacities_df):
         'developable_agent_weight', 'developable_customers_in_state')
     state_total_agents.columns = state_total_agents.columns.str.replace(
         'developable_agent_weight', 'agent_count')
-    
-    # Merge together
-    state_denominators = pd.merge(state_total_developable_customers, state_total_agents, how='left', on=[
+    # merge together
+    state_denominators = pd.merge(state_total_developable_customers, state_total_agents.drop_duplicates(), how='left', on=[
                                   'state_abbr', 'sector_abbr', 'tech'])
 
-    # Merge back to the main dataframe
-    dataframe = pd.merge(dataframe, state_denominators, how='left', on=[
+    # merge back to the main dataframe
+    dataframe = pd.merge(dataframe, state_denominators.drop_duplicates(), how='left', on=[
                          'state_abbr', 'sector_abbr', 'tech'])
 
-    # Merge in the state starting capacities
-    dataframe = pd.merge(dataframe, state_starting_capacities_df, how='left',
+    # merge in the state starting capacities
+    dataframe = pd.merge(dataframe, state_starting_capacities_df.drop_duplicates(), how='left',
                          on=['state_abbr', 'sector_abbr'])
     
 
