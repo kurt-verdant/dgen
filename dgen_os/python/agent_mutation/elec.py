@@ -160,7 +160,7 @@ def apply_pv_tech_performance(dataframe, pv_tech_traj):
     '''
 
     dataframe = dataframe.reset_index()
-
+    print(dataframe, pv_tech_traj)
     # Combine the pv_tech_traj DataFrame to the agent DataFrame
     dataframe = pd.merge(dataframe, pv_tech_traj, how='left', on=['sector_abbr', 'year'])
                          
@@ -439,6 +439,9 @@ def apply_load_growth(dataframe, load_growth_df):
     
     # Create 'county_id' column in agent DataFrame
     dataframe["county_id"] = dataframe.county_id.astype(int)
+    print("load growth df: ", load_growth_df)
+    print(dataframe.columns)
+
     dataframe = pd.merge(dataframe, load_growth_df.drop_duplicates(), how='left', on=['year', 'sector_abbr', 'county_id'])
 
     # For residential agents, load growth translates to kwh_per_customer change
@@ -1117,7 +1120,7 @@ def apply_market_last_year(dataframe, market_last_year_df):
 
     """
 
-    dataframe = dataframe.merge(market_last_year_df, on=['agent_id'], how='left')
+    dataframe = dataframe.merge(market_last_year_df.drop_duplicates(), on=['agent_id'], how='left')
     
     return dataframe
 
