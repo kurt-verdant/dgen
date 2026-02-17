@@ -237,8 +237,7 @@ def calc_system_performance(kw, pv, utilityrate, loan, batt, costs, agent, rate_
     # Assign calculated values to the CashLoan module
     loan.SystemOutput.annual_energy_value = annual_energy_value 
     loan.SystemOutput.gen = utilityrate.SystemOutput.gen
-    loan.ThirdPartyOwnership.elec_cost_with_system = utilityrate.Outputs.elec_cost_with_system
-    loan.ThirdPartyOwnership.elec_cost_without_system = utilityrate.Outputs.elec_cost_without_system
+    loan.ChargesByMonth.utility_bill_w_sys = utilityrate.Outputs.utility_bill_w_sys
 
     # Calculate system costs
     direct_costs = (system_costs + batt_costs) * costs['cap_cost_multiplier']
@@ -327,15 +326,16 @@ def calc_system_size_and_performance(agent, rate_switch_table):
 
     # Set the battery type to use based on agent sector
     if agent.loc['sector_abbr'] == 'res':
-        batt = battery.default("GenericBatteryResidential")
+        batt = battery.default("CustomGenerationBatteryResidential")
     else:
-        batt = battery.default("GenericBatteryCommercial")
+        batt = battery.default("CustomGenerationBatteryCommercial")
 
     # Instantiate utilityrate5 model based on agent sector
     if agent.loc['sector_abbr'] == 'res':
-        utilityrate = utility.from_existing(batt, "GenericBatteryResidential")
+        utilityrate = utility.from_existing(batt, "CustomGenerationBatteryResidential")
     else:
-        utilityrate = utility.from_existing(batt, "GenericBatteryCommercial")
+        utilityrate = utility.from_existing(batt, "CustomGenerationBatteryCommercial")
+    tariff_dict = agent.loc['tariff_dict']
     
     ######################################
     ###--------- UTILITYRATE5 ---------###
@@ -424,11 +424,11 @@ def calc_system_size_and_performance(agent, rate_switch_table):
     # Assume res agents do not evaluate depreciation at all
     # Assume non-res agents only evaluate federal depreciation (not state)
     if agent.loc['sector_abbr'] == 'res':
-        loan = cashloan.from_existing(utilityrate, "GenericBatteryResidential")
+        loan = cashloan.from_existing(utilityrate, "CustomGenerationBatteryResidential")
         loan.FinancialParameters.market = 0
 
     else:
-        loan = cashloan.from_existing(utilityrate, "GenericBatteryCommercial")
+        loan = cashloan.from_existing(utilityrate, "CustomGenerationBatteryCommercial")
         loan.FinancialParameters.market = 1
 
     # Assign values to PySAM CashLoan module
@@ -574,8 +574,8 @@ def calc_system_size_and_performance(agent, rate_switch_table):
     if npv_w_batt >= npv_no_batt:
         system_kw = res_with_batt.x
         annual_energy_production_kwh = batt_annual_energy_kwh
-        first_year_elec_bill_with_system = batt_util_outputs['elec_cost_with_system_year1']
-        first_year_elec_bill_without_system = batt_util_outputs['elec_cost_without_system_year1']
+        first_year_elec_bill_with_system = batt_util_outputs['utility_bill_w_sys_year1']
+        first_year_elec_bill_without_system = batt_util_outputs['utility_bill_wo_sys_year1']
 
         npv = npv_w_batt
 
@@ -602,8 +602,8 @@ def calc_system_size_and_performance(agent, rate_switch_table):
     else:
         system_kw = res_no_batt.x
         annual_energy_production_kwh = no_batt_annual_energy_kwh
-        first_year_elec_bill_with_system = no_batt_util_outputs['elec_cost_with_system_year1']
-        first_year_elec_bill_without_system = no_batt_util_outputs['elec_cost_without_system_year1']
+        first_year_elec_bill_with_system = no_batt_util_outputs['utility_bill_w_sys_year1']
+        first_year_elec_bill_without_system = no_batt_util_outputs['utility_bill_wo_sys_year1']
 
         npv = npv_no_batt
         payback = no_batt_loan_outputs['payback']
@@ -1077,7 +1077,7 @@ def calc_max_market_share(dataframe, max_market_share_df):
     max_market_share_df['payback_period_as_factor'] = (max_market_share_df['payback_period'] * 100).round().astype('int')
 
     # Join the max_market_share table and dataframe in order to select the ultimate mms based on the metric value. 
-    dataframe = pd.merge(dataframe, max_market_share_df[['sector_abbr', 'max_market_share', 'metric', 'payback_period_as_factor', 'business_model']], 
+    dataframe = pd.merge(dataframe, max_market_share_df[['sector_abbr', 'max_market_share', 'metric', 'payback_period_as_factor', 'business_model']].drop_duplicates(), 
         how = 'left', on = ['sector_abbr', 'metric','payback_period_as_factor','business_model'])
     
     # Select for only necessary columns to be returned with dataframe
